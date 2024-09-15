@@ -1,0 +1,1 @@
+# Automatic-number-plate-recognition-with-Yolov8-and-EasyOCR
