@@ -19,7 +19,7 @@
 from logger import logger
 from ultralytics import YOLO
 import cv2
-
+from sort import *
 # _______________2. load the models_______________
 yolo_model = YOLO("./models/yolov8n.pt")
 license_plate_detector = YOLO('./models/license_plate_detector.pt')
@@ -29,7 +29,8 @@ path_video = r"./Video/video1.mp4"
 cap = cv2.VideoCapture(path_video)
 
 num_frame = -1
-vehicles = [2, 3, 5, 7] #id of the vehicles that we want to detect
+vehicles = [2, 3, 5, 7] # id of the vehicles that we want to detect
+tracker = Sort()
 
 # _______________4. read the frames_______________
 while True and num_frame < 10:
@@ -54,6 +55,17 @@ while True and num_frame < 10:
         if float(class_id) in vehicles:
             detections_bbox_score.append([x1, y1, x2, y2, score])
 
+
+    # _______________5. Track vehicles_______________
+
+    tracker_ids = tracker.update(np.asarray(detections_bbox_score))
+    """
+    Params of the update function:
+        a numpy array of detections in the format [[x1,y1,x2,y2,score],[x1,y1,x2,y2,score],...]
+    Requires: this method must be called once for each frame even with empty detections (use np.empty((0, 5)) for frames without detections).
+    Returns the a similar array, where the last column is the object ID.
+    """
+    
     cv2.imshow("License Plate Detector", img)
         
 
