@@ -37,3 +37,25 @@ while True and num_frame < 10:
 
     if not success:
         print("Failed to read the frame or end of the video reached.")
+
+    # _______________5. detect the vehicles_______________
+    detections = yolo_model(img)[0]
+    """
+    detections contains the predicted bounding boxes, class labels,
+    confidence scores, and other information for each detected object
+    in the image.
+    """
+    detections_bbox_score = []
+    # logger.info(detections)
+
+    for detection in detections.boxes.data.tolist():
+        # logger.info(detection)
+        x1, y1, x2, y2, score, class_id = detection
+        if float(class_id) in vehicles:
+            detections_bbox_score.append([x1, y1, x2, y2, score])
+
+    cv2.imshow("License Plate Detector", img)
+        
+
+    if cv2.waitKey(1) & 0xFF == ord("q"):
+        break
