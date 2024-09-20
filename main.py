@@ -9,7 +9,7 @@
 5. detect the vehicles
 6. track it using Sort 
 7. detect license plates
-8. ...
+8. assign license plate to their car
 """
 # =================================================<<
 # =================================================<<
@@ -20,6 +20,8 @@ from logger import logger
 from ultralytics import YOLO
 import cv2
 from sort import *
+from utils import get_car, read_license_plate
+
 # _______________2. load the models_______________
 yolo_model = YOLO("./models/yolov8n.pt")
 license_plate_detector = YOLO('./models/license_plate_detector.pt')
@@ -56,7 +58,7 @@ while True and num_frame < 10:
             detections_bbox_score.append([x1, y1, x2, y2, score])
 
 
-    # _______________5. Track vehicles_______________
+    # _______________6. Track vehicles_______________
 
     tracker_ids = tracker.update(np.asarray(detections_bbox_score))
     """
@@ -66,7 +68,35 @@ while True and num_frame < 10:
     Returns the a similar array, where the last column is the object ID.
     """
     
-    cv2.imshow("License Plate Detector", img)
+    # _______________7. detect license plates_______________
+    license_plates_detections = license_plate_detector(img)[0]
+    
+    for license_detected in license_plates_detections.boxes.data.tolist():
+        x1, y1, x2, y2, score, class_id = license_detected
+    
+        # _______________8. assign license plate to their car_______________
+        x1car, y1car, x2car, y2car, car_id = get_car(license_detected, tracker_ids)
+        
+        # _______________9. Crop and process the license plate_______________
+        license_detected_crop = img[int(y1) : int(y2), int(x1) : int(x2), :] 
+        license_detected_gray = cv2.cvtColor(license_detected_crop,cv2.COLOR_BGR2GRAY)
+        _, license_detected_thresh = cv2.threshold(license_detected_gray, 64, 255, cv2.THRESH_BINARY_INV) # Any pixel value in license_detected_gray below 64 will be set to the maximum value (255), while pixels above 64 will be set to 0
+        
+        # cv2.imshow("Cropped image", license_detected_crop)
+        # cv2.imshow("thresh image", license_detected_thresh)
+        # cv2.waitKey(0)
+        
+        # _______________10. Read license plate number_______________
+        license_plate_text, license_plate_confidence = read_license_plate(license_detected_crop)
+        
+        
+        # _______________11. Results_______________
+        
+        
+        
+        
+        
+    # cv2.imshow("License Plate Detector", img)
         
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
